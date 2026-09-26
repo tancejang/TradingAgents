@@ -96,6 +96,36 @@ def test_cli_registration():
     assert get_model_options("codex", "quick") == [("Custom model ID", "custom")]
 
 
+def test_graph_callbacks_reach_model_and_receive_events(server, tmp_path):
+    from langchain_core.callbacks import BaseCallbackHandler
+
+    from tradingagents.default_config import DEFAULT_CONFIG
+    from tradingagents.graph.trading_graph import TradingAgentsGraph
+
+    class Tracker(BaseCallbackHandler):
+        def __init__(self):
+            self.started = 0
+            self.ended = 0
+
+        def on_chat_model_start(self, serialized, messages, **kwargs):
+            self.started += 1
+
+        def on_llm_end(self, response, **kwargs):
+            self.ended += 1
+
+    tracker = Tracker()
+    config = {**DEFAULT_CONFIG, "llm_provider": "codex", "backend_url": None,
+              "results_dir": str(tmp_path / "results"),
+              "data_cache_dir": str(tmp_path / "cache"),
+              "memory_log_path": str(tmp_path / "memory.md")}
+    graph = TradingAgentsGraph(config=config, callbacks=[tracker])
+    server.events = completed("callback check")
+    for model in (graph.quick_thinking_llm, graph.deep_thinking_llm):
+        assert model.callbacks == [tracker]
+        assert model.invoke("test").content == "callback check"
+    assert tracker.started == tracker.ended == 2
+
+
 def test_text_and_transcript_replay(server):
     server.events = completed("analysis")
     messages = [SystemMessage("Analyze only the supplied evidence"), HumanMessage("AAPL"),

@@ -282,7 +282,7 @@ class CodexClient(BaseLLMClient):
     def get_llm(self):
         if self.base_url:
             raise ValueError("The codex provider uses the local CLI; unset backend_url.")
-        unsupported = set(self.kwargs) - {"reasoning_effort", "timeout"}
+        unsupported = set(self.kwargs) - {"reasoning_effort", "timeout", "callbacks"}
         if unsupported:
             raise ValueError(f"Codex does not support these settings: {', '.join(sorted(unsupported))}")
         return CodexChatModel(model=self.model, **self.kwargs)
