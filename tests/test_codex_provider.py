@@ -1,6 +1,5 @@
 """Codex OAuth bridge tests: no credentials or model requests required."""
 
-import json
 import queue
 import sys
 import time
@@ -106,15 +105,17 @@ def test_text_and_transcript_replay(server):
     assert result.content == "analysis"
     instance = server.instances[-1]
     assert instance.closed
-    start, turn = [params for _, params in instance.calls]
+    start, injected, turn = [params for _, params in instance.calls]
     assert start["ephemeral"] and start["environments"] == []
     assert start["modelProvider"] == "openai"
     assert start["approvalPolicy"] == "never"
     assert turn["effort"] == "low"
-    transcript = json.loads(turn["input"][0]["text"])
-    assert transcript[0]["type"] == "system"
-    assert transcript[-1]["data"]["tool_call_id"] == "old"
-    assert transcript[-1]["data"]["content"] == "123.45"
+    transcript = injected["items"]
+    assert transcript[0]["role"] == "developer"
+    assert transcript[-1]["call_id"] == "old"
+    assert transcript[-2]["call_id"] == "old"
+    assert transcript[-1]["type"] == "function_call_output"
+    assert transcript[-1]["output"] == "123.45"
 
 
 def test_tool_handoff(server):
@@ -139,7 +140,7 @@ def test_structured_output(server):
     server.events = completed('{"summary":"hold"}')
     llm = codex.CodexChatModel(model="account-model")
     assert llm.with_structured_output(Report).invoke("report") == Report(summary="hold")
-    schema = server.instances[-1].calls[1][1]["outputSchema"]
+    schema = server.instances[-1].calls[2][1]["outputSchema"]
     assert schema["additionalProperties"] is False
     assert schema["required"] == ["summary"]
     raw = llm.with_structured_output(Report, include_raw=True).invoke("report")
