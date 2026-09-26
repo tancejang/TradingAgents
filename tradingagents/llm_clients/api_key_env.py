@@ -13,6 +13,7 @@ from __future__ import annotations
 
 PROVIDER_API_KEY_ENV: dict[str, str | None] = {
     "openai":     "OPENAI_API_KEY",
+    "codex":      None,  # Codex CLI manages ChatGPT OAuth and token refresh.
     "anthropic":  "ANTHROPIC_API_KEY",
     "google":     "GOOGLE_API_KEY",
     "azure":      "AZURE_OPENAI_API_KEY",

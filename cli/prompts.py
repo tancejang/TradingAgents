@@ -322,6 +322,7 @@ def _llm_provider_table() -> list[tuple[str, str, str | None]]:
     ollama_url = os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434/v1"
     return [
         ("OpenAI", "openai", "https://api.openai.com/v1"),
+        ("Codex (Sign in with ChatGPT; subscription limits apply)", "codex", None),
         ("Google", "google", None),
         ("Anthropic", "anthropic", "https://api.anthropic.com/"),
         ("xAI", "xai", "https://api.x.ai/v1"),

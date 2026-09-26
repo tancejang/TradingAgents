@@ -94,6 +94,8 @@ _MINIMAX_MODELS: dict[str, list[ModelOption]] = {
 
 
 MODEL_OPTIONS: ProviderModeOptions = {
+    # Account-specific availability is resolved by Codex, not the API catalog.
+    "codex": _CUSTOM_ONLY,
     "openai": {
         "quick": [
             ("GPT-6 Luna - Fast, high-volume and cost-efficient", "gpt-6-luna"),
