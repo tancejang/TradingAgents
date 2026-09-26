@@ -190,6 +190,57 @@ Alternatively, copy `.env.example` to `.env` and fill in your keys:
 cp .env.example .env
 ```
 
+### Codex — Sign in with ChatGPT (experimental)
+
+The `codex` provider uses your **Codex subscription allowance, including applicable
+weekly limits**. It does not provide unlimited ChatGPT inference. No OpenAI API
+key is needed, and it never falls back to API-key billing. Market-data vendor
+credentials, when needed, remain separate.
+
+Install a recent [Codex CLI](https://learn.chatgpt.com/docs/cli), then sign in:
+
+```bash
+python -m tradingagents.llm_clients.codex_client login
+# Headless alternative: append --device-auth
+python -m tradingagents.llm_clients.codex_client status
+```
+
+Select **Codex (Sign in with ChatGPT; subscription limits apply)** in the CLI,
+or set `TRADINGAGENTS_LLM_PROVIDER=codex` and both
+`TRADINGAGENTS_QUICK_THINK_LLM` / `TRADINGAGENTS_DEEP_THINK_LLM` in `.env` to
+model IDs available in your Codex account. Leave `TRADINGAGENTS_LLM_BACKEND_URL`
+unset. For Python callers:
+
+```python
+config = DEFAULT_CONFIG.copy()
+config.update({
+    "llm_provider": "codex",
+    "quick_think_llm": "your-codex-model",
+    "deep_think_llm": "your-codex-model",
+    "backend_url": None,
+})
+```
+
+Codex manages OAuth storage and refresh in `~/.tradingagents/codex`, separate
+from your normal Codex setup. The login above is required even if you already
+signed into Codex elsewhere. Use the same module's `logout` command to sign out.
+`TRADINGAGENTS_CODEX_PATH` selects an executable; `TRADINGAGENTS_CODEX_HOME`
+selects a dedicated credential directory. Keep that directory private and free
+of custom plugins, MCP servers, or instructions. Do not copy tokens into `.env`.
+
+The bridge uses the experimental [Codex app-server](https://learn.chatgpt.com/docs/app-server)
+protocol (developed against CLI 0.155). Each call replays the text conversation
+in an ephemeral thread. Native dynamic tool requests return to TradingAgents
+for execution, one at a time; structured reports use Codex's output schema.
+This adds process startup and context replay overhead. Token-level streaming,
+image input, forced tool selection, temperature, `max_tokens`, and
+`llm_max_retries` overrides are not supported; leave those settings unset.
+Codex manages its own transport retries. `openai_reasoning_effort` also applies
+to this provider. `TRADINGAGENTS_CODEX_TIMEOUT` sets the total per-call deadline
+in seconds (default 300). Quota and authentication errors are surfaced to the
+caller. See [authentication](https://learn.chatgpt.com/docs/auth) and
+[usage limits](https://learn.chatgpt.com/docs/pricing).
+
 ### CLI Usage
 
 Launch the interactive CLI:

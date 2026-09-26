@@ -30,6 +30,10 @@ def create_llm_client(
     """
     provider_lower = provider.lower()
 
+    if provider_lower == "codex":
+        from .codex_client import CodexClient
+        return CodexClient(model, base_url, **kwargs)
+
     # Native (non-OpenAI) APIs are matched first so their string check doesn't
     # import the OpenAI client. Everything else is OpenAI-compatible and routes
     # through the provider registry (single source of truth).
@@ -97,10 +101,13 @@ def build_llm_kwargs(config: dict) -> dict[str, Any]:
         if thinking_level:
             kwargs["thinking_level"] = thinking_level
 
-    elif provider == "openai":
+    elif provider in ("openai", "codex"):
         reasoning_effort = config.get("openai_reasoning_effort")
         if reasoning_effort:
             kwargs["reasoning_effort"] = reasoning_effort
+
+        if provider == "codex" and config.get("codex_timeout") is not None:
+            kwargs["timeout"] = float(config["codex_timeout"])
 
     elif provider == "anthropic":
         effort = config.get("anthropic_effort")
